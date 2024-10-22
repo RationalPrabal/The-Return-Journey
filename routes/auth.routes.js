@@ -5,6 +5,7 @@ const authRouter = express.Router();
 const bcrypt = require("bcrypt");
 const { generateAccessToken } = require("../utils/accessToken");
 const { generateRefreshToken } = require("../utils/refreshToken");
+const { authMiddleware } = require("../middlewares/auth.middleware");
 
 //! Register Route with refresh token
 authRouter.post("/register", async (req, res) => {
@@ -128,6 +129,71 @@ authRouter.post("/logout", async (req, res) => {
     return res
       .status(500)
       .send({ message: "Server error during logout", error: err.message });
+  }
+});
+
+//! Get all users with pagination (Protected route)
+authRouter.get("/users", authMiddleware, async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Default values
+  const options = {
+    page: parseInt(page), // Current page
+    limit: parseInt(limit), // Records per page
+  };
+
+  try {
+    // Fetch users based on pagination
+    const users = await User.find()
+      .select("-password -refreshToken") // Exclude sensitive fields
+      .limit(options.limit) // Limit the results
+      .skip((options.page - 1) * options.limit); // Skip previous pages
+
+    // Get total count of users
+    const totalUsers = await User.countDocuments();
+
+    // Response format
+    res.status(200).send({
+      page: options.page,
+      limit: options.limit,
+      totalUsers,
+      totalPages: Math.ceil(totalUsers / options.limit), // Calculate total pages
+      users,
+    });
+  } catch (err) {
+    res.status(500).send({
+      message: "Server error during user retrieval",
+      error: err.message,
+    });
+  }
+});
+
+//! Search for a user by email (Protected route)
+authRouter.get("/users/search", authMiddleware, async (req, res) => {
+  const { email } = req.query;
+
+  // Validate the query parameter
+  if (!email) {
+    return res
+      .status(400)
+      .send({ message: "Please provide an email to search." });
+  }
+
+  try {
+    // Find the user based on the provided email
+    const user = await User.findOne({ email }).select(
+      "-password -refreshToken"
+    ); // Exclude sensitive fields
+
+    if (!user) {
+      return res.status(404).send({ message: "User not found." });
+    }
+
+    // Return the found user
+    res.status(200).send(user);
+  } catch (err) {
+    res.status(500).send({
+      message: "Server error during user search",
+      error: err.message,
+    });
   }
 });
 
