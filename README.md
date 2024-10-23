@@ -14,6 +14,10 @@ A full-featured calendar event management application built with MERN Stack (Mon
 - Authentication: JWT (JSON Web Tokens)
 - API documentation: Swagger Doc
 
+## API Documentation
+- Swagger: https://the-return-journey-dgzl.onrender.com/api-docs/
+- Spreadsheet : https://docs.google.com/spreadsheets/d/1HPJwH9Bxa4tuJ_2lkRQ6zbkk9aN1ReHx0H3WAnOy1Ew/edit?gid=0#gid=0
+
 ## Getting Started
 - Clone the repository.
 - Install dependencies.
