@@ -7,6 +7,24 @@ const { authRouter } = require("./routes/auth.routes");
 const { connection } = require("./configs/database");
 const { eventRouter } = require("./routes/event.routes");
 const { calendarRouter } = require("./routes/calendar.routes");
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
+
+//! options to configure swagger
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Event Management App",
+      version: "1.0.0",
+    },
+  },
+  apis: ["./routes/*.js"],
+};
+
+const openapiSpecification = swaggerJsdoc(options);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openapiSpecification));
 
 app.use(express.json());
 app.use(
