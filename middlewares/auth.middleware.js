@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-const Blacklist = require("../models/blacklist.model"); // Import Blacklist model
+const Blacklist = require("../models/blacklist.model");
+const User = require("../models/user.model");
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -10,8 +11,8 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // Check if the token is blacklisted
-    const blacklistedToken = await Blacklist.findOne({ token });
-    if (blacklistedToken) {
+    const user = await User.find({});
+    if (!user[0].refreshToken) {
       return res.status(403).json({ message: "Token has been revoked" });
     }
 
@@ -26,6 +27,7 @@ const authMiddleware = async (req, res, next) => {
       next(); // Proceed to the next middleware or route handler
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: "Server error" });
   }
 };

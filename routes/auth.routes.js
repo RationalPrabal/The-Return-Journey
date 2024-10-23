@@ -7,7 +7,8 @@ const { generateAccessToken } = require("../utils/accessToken");
 const { generateRefreshToken } = require("../utils/refreshToken");
 const { authMiddleware } = require("../middlewares/auth.middleware");
 const { validateUserCredentials } = require("../utils/passwordValidation");
-
+const jwt = require("jsonwebtoken");
+const Blacklist = require("../models/blacklist.model");
 //! Register Route with refresh token
 
 /**
@@ -235,17 +236,22 @@ authRouter.post("/refresh-token", async (req, res) => {
  *         description: Internal server error
  */
 authRouter.post("/logout", async (req, res) => {
-  const { email } = req.body;
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    return res.status(401).send({ message: "Refresh token required" });
+  }
 
   try {
-    // Find the user and remove the refresh token
-    await User.findOneAndUpdate({ email }, { refreshToken: null });
-
-    return res.status(200).send({ message: "Logout successful" });
+    await Blacklist.create({
+      token: refreshToken,
+      expiresAt: new Date(Date.now()),
+    });
+    await User.updateOne({ refreshToken }, { refreshToken: null });
+    return res.status(200).send({ message: "Logged out successfully" });
   } catch (err) {
     return res
       .status(500)
-      .send({ message: "Server error during logout", error: err.message });
+      .send({ message: "Server error", error: err.message });
   }
 });
 
